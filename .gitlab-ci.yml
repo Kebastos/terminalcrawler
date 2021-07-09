@@ -1,0 +1,40 @@
+variables:
+  VERSION_MAJOR: 2021
+  VERSION_MINOR: 1
+  FULL_VERSION: '$VERSION_MAJOR.$VERSION_MINOR.$CI_PIPELINE_IID'
+
+stages:
+    - dockerize
+    - dockertest
+
+build_docker_container_dev:
+  stage: dockerize
+  only:
+    - dev
+  script:
+    - echo "Copy Docker file..."
+    - cp deployment/Dockerfile_temp .
+    - echo "Edit Docker file..."
+    - envsubst < Dockerfile_temp > Dockerfile
+    - echo "Build Docker image..."
+    - docker build . --pull -t dev_terminalcrawler_$FULL_VERSION:v.$CI_PIPELINE_IID
+    - echo "Run Docker container..."
+    - docker run --rm --name DEV_TERMINALCRAWLER_$CI_PIPELINE_IID -d dev_terminalcrawler_$FULL_VERSION:v.$CI_PIPELINE_IID
+  tags:
+    - shell_easmon_1
+
+build_docker_container_master:
+  stage: dockerize
+  only:
+    - master
+  script:
+    - echo "Copy Docker file..."
+    - cp deployment/Dockerfile_temp .
+    - echo "Edit Docker file..."
+    - envsubst < Dockerfile_temp > Dockerfile
+    - echo "Build Docker image..."
+    - docker build . --pull -t terminalcrawler_$FULL_VERSION:v.$CI_PIPELINE_IID
+    - echo "Run Docker container..."
+    - docker run --name TERMINALCRAWLER_$CI_PIPELINE_IID -d terminalcrawler_$FULL_VERSION:v.$CI_PIPELINE_IID
+  tags:
+    - shell_easmon_1

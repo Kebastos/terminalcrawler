@@ -1,0 +1,8 @@
+FROM dockerhub.repo.russianpost.ru/golang:latest 
+RUN mkdir /build
+COPY . /build
+WORKDIR /build 
+ENV USER_NAME=$USER_NAME
+ENV USER_PASSWORD=$USER_PASSWORD
+RUN go build -mod vendor -trimpath -ldflags="-s -w -extldflags='-static' -X 'main._version=APP_VERSION_ps'" -o main .
+CMD ["/build/main"]

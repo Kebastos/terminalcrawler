@@ -1,0 +1,12 @@
+{
+    "service_name": "terminalcrawler",
+    "display_name": "terminalcrawler",
+    "service_description": "Сервис сбора состояния терминалов на сети.",
+    "monitoringDb": {
+      "server": "D01MON2EASPT01\\EASMON",
+      "dbName": "entity"
+    },
+    "collectTerminalQuery": " select '%regionId%' as RegionId, rct.STORENUMBERPOS as StoreId, rtt.TERMINALID as TerminalId, MAX(lf.FormClose) as LastActionDateTime INTO #temp from [%server%].[%stageDbName%].[dbo].RETAILCHANNELTABLE rct join [%server%].[%stageDbName%].[dbo].RETAILTERMINALTABLE rtt on rct.RECID = rtt.STORERECID join [%server%].[%stageDbName%].[dbo].GM_LOGGINGOPERATIONSFORMS lf on rtt.TERMINALID = lf.TerminalID and lf.FormClose > DATEADD(MONTH, -2, GETDATE()) GROUP BY rct.STORENUMBERPOS, rtt.TERMINALID merge OpsTerminalInfo as TRG using ( select * FROM #temp) as SRC on TRG.[RegionId] = SRC.[RegionId] AND TRG.[StoreId] = SRC.[StoreId] AND TRG.[TERMINALID] = SRC.[TERMINALID]   when matched    then UPDATE     set TRG.[LastActionDateTime] = SRC.[LastActionDateTime]   when not matched by target    then INSERT ([RegionId], [StoreId], [TERMINALID], [LastActionDateTime])      VALUES ([RegionId], [StoreId], [TERMINALID], [LastActionDateTime]); DROP TABLE #temp",
+    "getEnvInfoQuery": "select * from EnvInfo",
+    "cronTime": "0 0 0/6 * * *"
+  }
